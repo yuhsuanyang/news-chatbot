@@ -55,10 +55,11 @@ def page():
 
     st.header("ChatNews")
     default_catetgory = "Latest"
-    st.subheader("I will read some news about these topics from thenextweb.com")
+    st.subheader(
+        "I will read some news about these topics from thenextweb.com")
     st.multiselect(
         "Select some topic that you are interested in",
-        category_links.keys(),
+        list(category_links.keys()) + [default_catetgory],
         [default_catetgory],
         key="selected_categories",
     )
