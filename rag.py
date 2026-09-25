@@ -4,9 +4,10 @@ from langchain_community.embeddings import FastEmbedEmbeddings
 from langchain_core.documents.base import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema.output_parser import StrOutputParser
-from langchain.schema.runnable import RunnablePassthrough
+from langchain.schema.runnable import RunnablePassthrough, Runnable
 from langchain.prompts import PromptTemplate
 from langchain.vectorstores.utils import filter_complex_metadata
+from langchain_core.callbacks import BaseCallbackHandler
 
 
 class ChatNews:
@@ -29,6 +30,7 @@ class ChatNews:
             Answer: [/INST]
             """
         )
+        self.doc_handler = ContextHandler()
 
     def ingest(self, docs: Document, category: str):
         self.saved_doc_categories.append(category)
@@ -47,13 +49,34 @@ class ChatNews:
         self.chain = ({"context": self.retriever, "question": RunnablePassthrough()}
                       | self.prompt
                       | self.model
-                      | StrOutputParser())
+                      | StrOutputParser()
+                      | FinalOutputGenerator()
+                      )
 
     def ask(self, query: str):
-        return self.chain.invoke(query)
+        return self.chain.invoke(query, config={"callbacks": [self.doc_handler]})
 
     def clear(self):
         self.vector_store = None
         self.retriever = None
         self.chain = None
         self.saved_doc_categories = []
+
+    
+class ContextHandler(BaseCallbackHandler):
+    def on_retriever_end(self, documents, run_id, parent_run_id, **kwargs):
+        self.context = documents
+        print(self.context)
+
+    # def on_chain_end(self, outputs, run_id, parent_run_id, **kwargs):
+    #     print("on chain end")
+    #     print(outputs)
+
+class FinalOutputGenerator(Runnable):
+    def invoke(self, input, config, **kwargs):
+        handler = config["callbacks"].handlers[0]
+        response = f"{input} \n Data Source: \n"
+        for i, doc in enumerate(handler.context):
+            src = f"{i + 1}. {doc.metadata["title"]}: {doc.metadata["link"]} \n"
+            response += src
+        return response
