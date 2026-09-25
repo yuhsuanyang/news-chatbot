@@ -10,12 +10,14 @@ def get_category_link():
     headers=HEADER)
     print(res_index)
     soup = BeautifulSoup(res_index.text, "lxml")
-    categories = soup.find(class_="c-nav__level2").find_all(class_="c-nav__menuItem")
+    categories = soup.find(class_="c-nav__level2").find_all(lambda c: c.get("class") == ["c-nav__menuItem"]) + \
+    soup.find(class_="c-nav__level2").find_all(lambda c: c.get("class") == ["c-nav__submenuItem"])
+
     category_links = {}
     for i in range(len(categories)):
         link = categories[i].find("a")["href"]
-        if link.startswith("/"):
-            category_links[categories[i].text.strip()] = f"{DOMAIN}{link}"
+        if link.startswith("https://thenextweb.com"):
+            category_links[categories[i].text.strip()] = link
     return category_links
 
 
@@ -27,7 +29,7 @@ def get_news_links(url, pages=1):
         soup = BeautifulSoup(res.text, "lxml")
         news = soup.find_all("article")
         for i in range(len(news)):
-            link = f"{DOMAIN}/{news[i].find('a')['href']}"
+            link = f"{DOMAIN}{news[i].find('a')['href']}"
             links.append(link)
     return links
 
