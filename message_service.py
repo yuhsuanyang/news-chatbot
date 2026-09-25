@@ -7,6 +7,8 @@ import datetime
 cutoff_date = datetime.datetime.today() - datetime.timedelta(days=1)
 date = datetime.datetime.strftime(cutoff_date, "%Y-%m-%d")
 context = get_email_content(date)
+if len(context) == 0:
+    exit()
 response = get_gemini_response(context)
 
 
@@ -64,23 +66,24 @@ for sec in response["sections"]:
 
 with ApiClient(config) as api_client:
     line_bot_api = MessagingApi(api_client)
-    line_bot_api.push_message(
-         PushMessageRequest(
-             to=FRIEND_ID,
-             messages=[
-                 TextMessage(
-                     text=f"找到 {len(context)} 封來自Bloomberg 的新郵件"
-                 )
-             ]
-         )
-    )
-    line_bot_api.push_message(
-        PushMessageRequest(
-            to=FRIEND_ID,
-            messages=[
-                FlexMessage(
-                    alt_text=greeting,
-                    contents=FlexContainer.from_dict(content)
-                )
-            ]
-    ))
+    for id_ in FRIEND_ID:
+        line_bot_api.push_message(
+            PushMessageRequest(
+                to=id_,
+                messages=[
+                    TextMessage(
+                        text=f"找到 {len(context)} 封來自Bloomberg 的新郵件"
+                    )
+                ]
+            )
+        )
+        line_bot_api.push_message(
+            PushMessageRequest(
+                to=id_,
+                messages=[
+                    FlexMessage(
+                        alt_text=greeting,
+                        contents=FlexContainer.from_dict(content)
+                    )
+                ]
+        ))

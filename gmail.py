@@ -69,7 +69,8 @@ def get_email_content(after_date):
 
 def get_gemini_response(content) -> dict:
     prompt = f"""
-        你是一個有在研究總體經濟的專家，請你幫我分析以下的文章內容，整理出重點，並且幫我分析最近總體經濟走向以及以及對台灣股市的。
+        你是一個有在研究總體經濟的專家，請你幫我分析以下的文章內容，整理出重點，結合美股昨天的表現，
+        分析最近總體經濟走向以及以及對台灣股市的影響。
         回答時請使用繁體中文。
     """
     for i, text in enumerate(content):
